@@ -14,10 +14,12 @@ class TinyMidi {
     byte midiMessage[3];
     Stream * stream;
 
+  const static byte TINY_MIDI_NOTE_OFF = 0x08; // 0x80 >> 4 == 0x08 == 8 == B1000
+    const static byte TINY_MIDI_NOTE_ON = 0x09; // 0x90 >> 4 == 0x09 == 9 == B1001
+    const static byte TINY_MIDI_CTL = 0x0B;
+
   public:
-    const static byte NOTE_OFF = 0x08;
-    const static byte NOTE_ON = 0x09;
-    const static byte CTL = 0x0B;
+   
     const static int BAUD = 31250;
     /*
       #define MM_NOTE_OFF 0x08
@@ -43,36 +45,42 @@ class TinyMidi {
 
     void receiveMessages() {
       while (stream->available() ) {
-        uint8_t extracted = stream->read();
+        uint8_t data = stream->read();
 
-        if (extracted < 0x80) {
+        if (data < 0x80) { // 0x80 == 128 == B10000000
           if ( midiType ) {
-            midiMessage[midiMessageLength] = extracted;
+            midiMessage[midiMessageLength] = data;
             midiMessageLength++;
             if ( midiMessageLength == 2 ) {
-              if ( midiType == NOTE_ON  && noteOnCallback  ) {
 
-                noteOnCallback(midiChannel, midiMessage[0], midiMessage[1]);
-
-              } else if ( midiType == NOTE_OFF && noteOffCallback   ) {
+              if ( midiType == TINY_MIDI_NOTE_ON    ) {
+                if ( midiMessage[1] > 0  ) {
+                  if ( noteOnCallback) noteOnCallback(midiChannel, midiMessage[0], midiMessage[1]);
+                } else {
+                  if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
+                }
+                
+              } else if ( midiType == TINY_MIDI_NOTE_OFF && noteOffCallback   ) {
 
                 noteOffCallback(midiChannel, midiMessage[0] );
 
-              } else if ( midiType == CTL && controlChangeCallback  ) {
+              } else if ( midiType == TINY_MIDI_CTL && controlChangeCallback  ) {
 
                 controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
 
               }
+
               midiType = 0;
             }
           }
         } else {
-          midiChannel = extracted & B00001111;
+          // GET CHANNEL DATA AND OFFSET IT BY 1
+          midiChannel = (data & B00001111)+1;
           // GET RID OF CHANNEL DATA
-          extracted = extracted >> 4;
+          data = data >> 4;
           // ONLY HANDLE KNOWN MESSAGES
-          if ( extracted == NOTE_OFF || extracted == NOTE_ON || extracted == CTL ) {
-            midiType = extracted;
+          if ( data == NOTE_OFF || data == NOTE_ON || data == CTL ) {
+            midiType = data;
           } else {
             midiType = 0;
           }
