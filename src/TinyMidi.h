@@ -42,36 +42,61 @@ class TinyMidi {
     void setMidiNoteOffCallback(void (*fptr)(byte channel, byte note)) {
       noteOffCallback = fptr;
     }
-
+/*
+    void dd(int indata) {
+        Serial.print(indata);
+        Serial.print("->");
+        Serial.print(midiType);
+        Serial.print(" ");
+        Serial.print(midiMessageLength);
+        Serial.print(" ");
+        Serial.print(midiMessage[0]);
+        Serial.print(" ");
+        Serial.print(midiMessage[1]);
+        Serial.println();
+    }
+*/
     void receiveMessages() {
       while (stream->available() ) {
-        uint8_t data = stream->read();
+        int data = stream->read();
+
+        int indata= data;
+  
+
+
 
         if (data < 0x80) { // 0x80 == 128 == B10000000
           if ( midiType ) {
             midiMessage[midiMessageLength] = data;
             midiMessageLength++;
             if ( midiMessageLength == 2 ) {
-
+             // dd(indata);
               if ( midiType == TINY_MIDI_NOTE_ON    ) {
                 if ( midiMessage[1] > 0  ) {
+                  
                   if ( noteOnCallback) noteOnCallback(midiChannel, midiMessage[0], midiMessage[1]);
                 } else {
+                  
                   if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
                 }
                 
               } else if ( midiType == TINY_MIDI_NOTE_OFF && noteOffCallback   ) {
-
+               
                 noteOffCallback(midiChannel, midiMessage[0] );
 
               } else if ( midiType == TINY_MIDI_CTL && controlChangeCallback  ) {
-
+               
                 controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
 
               }
 
               midiType = 0;
+            } 
+            /*
+            else {
+              dd(indata);
             }
+            */
           }
         } else {
           // GET CHANNEL DATA AND OFFSET IT BY 1
@@ -79,13 +104,15 @@ class TinyMidi {
           // GET RID OF CHANNEL DATA
           data = data >> 4;
           // ONLY HANDLE KNOWN MESSAGES
-          if ( data == NOTE_OFF || data == NOTE_ON || data == CTL ) {
+          if ( data == TINY_MIDI_NOTE_OFF || data == TINY_MIDI_NOTE_ON || data == TINY_MIDI_CTL ) {
             midiType = data;
           } else {
             midiType = 0;
           }
           midiMessageLength = 0;
         }
+        
+        //dd(indata);
       }
     }
 };
