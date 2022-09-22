@@ -89,8 +89,9 @@ class TinyMidi {
                 controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
 
               }
-
-              midiType = 0;
+              // KEEP MIDI TYPE (AND CHANNEL) FOR RUNNING STATUS
+              //midiType = 0;
+              midiMessageLength = 0;
             } 
             /*
             else {
