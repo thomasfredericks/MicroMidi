@@ -1,6 +1,6 @@
 
 
-class TinyMidi {
+class MicroMidi {
 
     void (*noteOnCallback)(byte channel, byte note, byte velocity);
     void (*noteOffCallback)(byte channel, byte note);
@@ -20,14 +20,14 @@ class TinyMidi {
 
   public:
    
-    const static int BAUD = 31250;
+    const static int MIDI_BAUD = 31250;
     /*
       #define MM_NOTE_OFF 0x08
       #define MM_NOTE_ON 0x09
       #define MM_CTL 0x0B
       #define MM_BAUD 31250
     */
-    TinyMidi( Stream * stream) {
+    MicroMidi( Stream * stream) {
       this->stream = stream;
     }
 
