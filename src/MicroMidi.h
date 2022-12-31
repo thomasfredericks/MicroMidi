@@ -20,7 +20,10 @@ class MicroMidi {
 
   public:
    
-    const static int MIDI_BAUD = 31250;
+    const static unsigned long MIDI_SERIAL_BAUD = 31250;
+    const static uint8_t MIDI_SERIAL_CONFIG = SERIAL_8N1;
+
+
     /*
       #define MM_NOTE_OFF 0x08
       #define MM_NOTE_ON 0x09
