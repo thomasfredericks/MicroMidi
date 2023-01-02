@@ -14,14 +14,14 @@ class MicroMidi {
     byte midiMessage[3];
     Stream * stream;
 
-  const static byte TINY_MIDI_NOTE_OFF = 0x08; // 0x80 >> 4 == 0x08 == 8 == B1000
+    const static byte TINY_MIDI_NOTE_OFF = 0x08; // 0x80 >> 4 == 0x08 == 8 == B1000
     const static byte TINY_MIDI_NOTE_ON = 0x09; // 0x90 >> 4 == 0x09 == 9 == B1001
     const static byte TINY_MIDI_CTL = 0x0B;
 
   public:
    
     const static unsigned long MIDI_SERIAL_BAUD = 31250;
-    const static uint8_t MIDI_SERIAL_CONFIG = SERIAL_8N1;
+    const static int MIDI_SERIAL_CONFIG = SERIAL_8N1;
 
 
     /*
