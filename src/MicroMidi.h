@@ -1,5 +1,16 @@
 
+// TODO
+/*
+A recommended approach for a receiving device is to maintain its "running status buffer" as so:
 
+    Buffer is cleared (ie, set to 0) at power up.
+    Buffer stores the status when a Voice Category Status (ie, 0x80 to 0xEF) is received.
+    Buffer is cleared when a System Common Category Status (ie, 0xF0 to 0xF7) is received.
+    Nothing is done to the buffer when a RealTime Category message is received (ie, Status of 0xF8 to 0xFF). 
+        Because a RealTime message may be received at any time, including interspersed with another message, it should be handled transparently. For example, if a 0xF8 byte was received inbetween any 2 bytes of the above examples, the 0xF8 should be processed immediately, and then the device should resume processing the example streams exactly as it would have otherwise. Because RealTime messages only consist of a Status, running status obviously can't be implemented on RealTime messages. 
+    Any data bytes are ignored when the buffer is 0.
+
+*/
 
 class MicroMidi {
 
