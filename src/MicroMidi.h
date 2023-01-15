@@ -76,7 +76,6 @@ public:
     while (stream->available() ) {
       int data = stream->read();
 
-      int indata = data;
       //Serial.print("RAW ");
       //Serial.println(data);
 
@@ -107,8 +106,7 @@ public:
                 controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
 
               }
-              // KEEP MIDI TYPE (AND CHANNEL) FOR RUNNING STATUS
-              //midiType = 0;
+
               midiMessageLength = 0;
             }
         } else {
