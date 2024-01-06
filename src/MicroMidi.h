@@ -1,6 +1,8 @@
 
 // TODO
 /*
+http://midi.teragonaudio.com/tech/midispec/run.htm
+
 A recommended approach for a receiving device is to maintain its "running status buffer" as so:
 
     Buffer is cleared (ie, set to 0) at power up.
@@ -12,11 +14,14 @@ A recommended approach for a receiving device is to maintain its "running status
 
 */
 
+#define MIDI_PITCH_BEND_CENTER 8192
+
 class MicroMidi {
 
   void (*noteOnCallback)(byte channel, byte note, byte velocity);
   void (*noteOffCallback)(byte channel, byte note);
   void (*controlChangeCallback) (byte channel, byte controller, byte value);
+  void (*pitchBendCallback) (byte channel, int pitch);
 
 private:
   byte midiChannel;
@@ -29,6 +34,7 @@ private:
   const static byte TINY_MIDI_NOTE_OFF = 0x80;
   const static byte TINY_MIDI_NOTE_ON = 0x90;
   const static byte TINY_MIDI_CTL = 0xB0;
+  const static byte TINY_MIDI_BEND = 0xE0;
 
 
 public:
@@ -58,6 +64,11 @@ public:
   void setMidiNoteOffCallback(void (*fptr)(byte channel, byte note)) {
     noteOffCallback = fptr;
   }
+  
+    void setMidiPitchBendCallback(void (*fptr)(byte channel, int pitch)) {
+    pitchBendCallback = fptr;
+  }
+
   /*
       void dd(int indata) {
           Serial.print(indata);
@@ -104,6 +115,9 @@ public:
               } else if ( runningStatusIn == TINY_MIDI_CTL && controlChangeCallback  ) {
                 //Serial.println("CTRL");
                 controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
+
+              } else if ( runningStatusIn == TINY_MIDI_BEND && pitchBendCallback ) {
+                  pitchBendCallback(midiChannel, midiMessage[0] + (midiMessage[1]<<7));
 
               }
 
