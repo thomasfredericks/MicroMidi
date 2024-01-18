@@ -148,6 +148,24 @@ public:
       //dd(indata);
     }
   }
+
+  // Copied from https://github.com/little-scale/mtof created by Sebastian Tomczak, 25 March 2017 
+  static float midiToFrequency( float note , float baseFrequency, float baseNote) {
+    return baseFrequency * pow (2.0, (note - baseNote) / 12.0);
+  }
+  static float midiToFrequency(float note) {
+    return midiToFrequency(note, 440.0, 69.0);
+  }
+
+  // Copied from https://github.com/little-scale/mtof created by Sebastian Tomczak, 25 March 2017 
+  static float frequencyToMidi(float frequency, float baseFrequency, float baseNote) {
+    return baseNote + (12.0 * log(frequency / baseFrequency) / log(2));
+  }
+  static float frequencyToMidi(float frequency) {
+    return frequencyToMidi(frequency,440.0, 69.0);
+  }
+
+
 };
 
 template <int L>
