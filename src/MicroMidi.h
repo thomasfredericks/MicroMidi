@@ -1,3 +1,5 @@
+#ifndef _MICRO_MIDI_
+#define _MICRO_MIDI_
 
 // TODO
 /*
@@ -13,6 +15,12 @@ A recommended approach for a receiving device is to maintain its "running status
     Any data bytes are ignored when the buffer is 0.
 
 */
+
+
+#ifndef __MICRO_LOG__
+#define LOG(...)
+#endif
+
 
 #define MIDI_PITCH_BEND_CENTER 8192
 
@@ -31,10 +39,10 @@ private:
   byte midiMessage[3];
   Stream * stream;
 
-  const static byte TINY_MIDI_NOTE_OFF = 0x80;
-  const static byte TINY_MIDI_NOTE_ON = 0x90;
-  const static byte TINY_MIDI_CTL = 0xB0;
-  const static byte TINY_MIDI_BEND = 0xE0;
+  const static byte MICRO_MIDI_NOTE_OFF = 0x80;
+  const static byte MICRO_MIDI_NOTE_ON = 0x90;
+  const static byte MICRO_MIDI_CTL = 0xB0;
+  const static byte MICRO_MIDI_BEND = 0xE0;
 
 
 public:
@@ -99,25 +107,25 @@ public:
             if ( midiMessageLength == 2 ) {
               // dd(indata);
 
-              if ( runningStatusIn == TINY_MIDI_NOTE_ON    ) {
+              if ( runningStatusIn == MICRO_MIDI_NOTE_ON    ) {
                 if ( midiMessage[1] > 0  ) {
-                  //Serial.println("NOTE ON");
+                  LOG("MicroOsc:NoteOn", midiChannel, midiMessage[0], midiMessage[1]);
                   if ( noteOnCallback) noteOnCallback(midiChannel, midiMessage[0], midiMessage[1]);
                 } else {
-                  // Serial.println("NOTE OFF");
+                  LOG("MicroOsc:NoteOff", midiChannel, midiMessage[0]);
                   if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
                 }
 
-              } else if ( runningStatusIn == TINY_MIDI_NOTE_OFF && noteOffCallback   ) {
-                //Serial.println("NOTE ON");
-                noteOffCallback(midiChannel, midiMessage[0] );
+              } else if ( runningStatusIn == MICRO_MIDI_NOTE_OFF   ) {
+                LOG("MicroOsc:NoteOff", midiChannel, midiMessage[0]);
+                if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
 
-              } else if ( runningStatusIn == TINY_MIDI_CTL && controlChangeCallback  ) {
+              } else if ( runningStatusIn == MICRO_MIDI_CTL  ) {
                 //Serial.println("CTRL");
-                controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
+                if ( controlChangeCallback ) controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
 
-              } else if ( runningStatusIn == TINY_MIDI_BEND && pitchBendCallback ) {
-                  pitchBendCallback(midiChannel, midiMessage[0] + (midiMessage[1]<<7));
+              } else if ( runningStatusIn == MICRO_MIDI_BEND  ) {
+                  if ( pitchBendCallback) pitchBendCallback(midiChannel, midiMessage[0] + (midiMessage[1]<<7));
 
               }
 
@@ -134,7 +142,7 @@ public:
 
 
         if ( incommingDataType  < 0xF0 ) {
-          // Voice Categroy Status
+          // Voice Category Status
           runningStatusIn = data;
           // GET CHANNEL DATA AND OFFSET IT BY 1
           midiChannel = (data & B00001111) + 1;
@@ -217,3 +225,5 @@ public:
 
 
 };
+
+#endif
