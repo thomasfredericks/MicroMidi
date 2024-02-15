@@ -157,6 +157,7 @@ public:
 
         // realtime messages
         if ( data >= 0xF8) {
+          
           if ( realtimeCallback ) realtimeCallback((REALTIME)data);
 
           // system common
