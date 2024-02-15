@@ -117,7 +117,7 @@ public:
       //Serial.println(data);
 
       if (data < 0x80) { // 0x80 == 128 == B10000000
-        if ( runningStatusIn && runningStatusIn < 0xF0 ) {
+        if ( runningStatusIn  ) {
 
           midiMessage[midiMessageLength] = data;
           midiMessageLength++;
@@ -160,7 +160,7 @@ public:
           if ( realtimeCallback ) realtimeCallback((REALTIME)data);
 
           // system common
-        } if ( data >= 0x80 ) {
+        } if ( data >= 0xF0 ) {
           runningStatusIn = 0;
           midiMessageLength = 0;
 
