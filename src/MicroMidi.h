@@ -1,19 +1,11 @@
 #ifndef _MICRO_MIDI_
 #define _MICRO_MIDI_
 
-// TODO
+
 /*
+THE FOLLOWING DOCUMENTATION WAS EXTREMILY HELPFUL IN MAKING THIS LIBRARY
 http://midi.teragonaudio.com/tech/midispec/run.htm
-
-A recommended approach for a receiving device is to maintain its "running status buffer" as so:
-
-    Buffer is cleared (ie, set to 0) at power up.
-    Buffer stores the status when a Voice Category Status (ie, 0x80 to 0xEF) is received.
-    Buffer is cleared when a System Common Category Status (ie, 0xF0 to 0xF7) is received.
-    Nothing is done to the buffer when a RealTime Category message is received (ie, Status of 0xF8 to 0xFF).
-        Because a RealTime message may be received at any time, including interspersed with another message, it should be handled transparently. For example, if a 0xF8 byte was received inbetween any 2 bytes of the above examples, the 0xF8 should be processed immediately, and then the device should resume processing the example streams exactly as it would have otherwise. Because RealTime messages only consist of a Status, running status obviously can't be implemented on RealTime messages.
-    Any data bytes are ignored when the buffer is 0.
-
+https://learn.sparkfun.com/tutorials/midi-tutorial/introduction
 */
 
 
@@ -24,13 +16,15 @@ A recommended approach for a receiving device is to maintain its "running status
 
 
 
-#define MIDI_PITCH_BEND_CENTER 8192
+
 
 class MicroMidi {
 
 
 
 public:
+
+  const static int  PITCH_BEND_CENTER = 8192;
   typedef enum  {
     START = 0xFA,
     CLOCK = 0xF8,
@@ -44,6 +38,7 @@ public:
   void (*controlChangeCallback) (byte channel, byte controller, byte value);
   void (*pitchBendCallback) (byte channel, int pitch);
   void (*realtimeCallback) (REALTIME type);
+  void (*channelPressureCallback) (byte channel, byte pressure);
 private:
   byte midiChannel;
   byte runningStatusIn;
@@ -56,6 +51,7 @@ private:
   const static byte MICRO_MIDI_NOTE_ON = 0x90;
   const static byte MICRO_MIDI_CTL = 0xB0;
   const static byte MICRO_MIDI_BEND = 0xE0;
+  const static byte MICRO_MIDI_CHANNEL_PRESSURE = 0xD0;
 
 
 public:
@@ -94,6 +90,10 @@ public:
     realtimeCallback = fptr;
   }
 
+  void setMidiChannelPressureCallback(void (*fptr)(byte channel, byte pressure)) {
+    channelPressureCallback = fptr;
+  }
+
 
   /*
       void dd(int indata) {
@@ -122,10 +122,15 @@ public:
           midiMessage[midiMessageLength] = data;
           midiMessageLength++;
 
-          if ( midiMessageLength == 2 ) {
-            // dd(indata);
-
-            if ( runningStatusIn == MICRO_MIDI_NOTE_ON    ) {
+          if ( midiMessageLength == 1 ) {
+            if ( runningStatusIn == MICRO_MIDI_CHANNEL_PRESSURE  ) {
+              if ( channelPressureCallback) channelPressureCallback(midiChannel, midiMessage[0] );
+              midiMessageLength = 0;
+            }
+          } else if ( midiMessageLength == 2 ) {
+          
+            switch ( runningStatusIn ) {
+            case MICRO_MIDI_NOTE_ON :
               if ( midiMessage[1] > 0  ) {
                 LOG("MicroOsc:NoteOn", midiChannel, midiMessage[0], midiMessage[1]);
                 if ( noteOnCallback) noteOnCallback(midiChannel, midiMessage[0], midiMessage[1]);
@@ -133,23 +138,24 @@ public:
                 LOG("MicroOsc:NoteOff", midiChannel, midiMessage[0]);
                 if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
               }
-
-            } else if ( runningStatusIn == MICRO_MIDI_NOTE_OFF   ) {
+              break;
+            case MICRO_MIDI_NOTE_OFF :
               LOG("MicroOsc:NoteOff", midiChannel, midiMessage[0]);
               if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
-
-            } else if ( runningStatusIn == MICRO_MIDI_CTL  ) {
-              //Serial.println("CTRL");
+              break;
+            case MICRO_MIDI_CTL :
               if ( controlChangeCallback ) controlChangeCallback(midiChannel, midiMessage[0] , midiMessage[1]);
-
-            } else if ( runningStatusIn == MICRO_MIDI_BEND  ) {
+              break;
+            case MICRO_MIDI_BEND :
               if ( pitchBendCallback) pitchBendCallback(midiChannel, midiMessage[0] + (midiMessage[1] << 7));
-
+              break;
             }
 
+            // SHOULD HAVE MATCHED, RESETTING
             midiMessageLength = 0;
           }
         } else {
+          // NO RUNNING STATUS, IGNORING
           midiMessageLength = 0;
         }
 
@@ -157,7 +163,7 @@ public:
 
         // realtime messages
         if ( data >= 0xF8) {
-          
+
           if ( realtimeCallback ) realtimeCallback((REALTIME)data);
 
           // system common
