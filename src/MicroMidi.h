@@ -128,7 +128,7 @@ public:
               midiMessageLength = 0;
             }
           } else if ( midiMessageLength == 2 ) {
-          
+
             switch ( runningStatusIn ) {
             case MICRO_MIDI_NOTE_ON :
               if ( midiMessage[1] > 0  ) {
@@ -203,57 +203,56 @@ public:
   }
 
 
-};
-
-template <int L>
-class MicroMidiLastNoteHeldTable {
-  byte data[L];
-  int count = 0;
-  void shiftNotes(int index) {
-    count = count - 1;
-    for (int i = index; i < count; i++) {
-      data[i] = data[i + 1];
-    }
-  }
-public:
 
 
-  void removeNote(byte note) {
-    for (int i = 0; i < count; i++) {
-      if (data[i] == note) {
-        data[i] = 0;
-        shiftNotes(i);
-        i--;
+  template <int L>
+  class LastNoteHeldTable {
+    byte data[L];
+    int count = 0;
+    void shiftNotes(int index) {
+      count = count - 1;
+      for (int i = index; i < count; i++) {
+        data[i] = data[i + 1];
       }
     }
-  }
+  public:
 
-  void addNote(byte note) {
-    if (count < L) {
-      data[count] = note;
-      count++;
-    } else {
-      shiftNotes(0);
-      data[L - 1] = note;
+
+    void removeNote(byte note) {
+      for (int i = 0; i < count; i++) {
+        if (data[i] == note) {
+          data[i] = 0;
+          shiftNotes(i);
+          i--;
+        }
+      }
     }
 
-  }
+    void addNote(byte note) {
+      if (count < L) {
+        data[count] = note;
+        count++;
+      } else {
+        shiftNotes(0);
+        data[L - 1] = note;
+      }
 
-  void clear() {
-    count = 0;
-  }
+    }
 
-  int getCount() {
-    return count;
-  }
+    void clear() {
+      count = 0;
+    }
 
-  byte getActiveNote() {
-    if ( count ) return data[count - 1];
-    else return 0;
-  }
+    int getCount() {
+      return count;
+    }
 
+    byte getActiveNote() {
+      if ( count ) return data[count - 1];
+      else return 0;
+    }
 
+  };
 
 };
-
 #endif
