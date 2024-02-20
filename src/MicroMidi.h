@@ -132,15 +132,15 @@ public:
             switch ( runningStatusIn ) {
             case MICRO_MIDI_NOTE_ON :
               if ( midiMessage[1] > 0  ) {
-                LOG("MicroOsc:NoteOn", midiChannel, midiMessage[0], midiMessage[1]);
+                //LOG("MicroMidi:NoteOn", midiChannel, midiMessage[0], midiMessage[1]);
                 if ( noteOnCallback) noteOnCallback(midiChannel, midiMessage[0], midiMessage[1]);
               } else {
-                LOG("MicroOsc:NoteOff", midiChannel, midiMessage[0]);
+                //LOG("MicroMidi:NoteOff", midiChannel, midiMessage[0]);
                 if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
               }
               break;
             case MICRO_MIDI_NOTE_OFF :
-              LOG("MicroOsc:NoteOff", midiChannel, midiMessage[0]);
+              //LOG("MicroMidi:NoteOff", midiChannel, midiMessage[0]);
               if ( noteOffCallback ) noteOffCallback(midiChannel, midiMessage[0] );
               break;
             case MICRO_MIDI_CTL :
