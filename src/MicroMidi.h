@@ -4,8 +4,8 @@
 
 /*
 THE FOLLOWING DOCUMENTATION WAS EXTREMILY HELPFUL IN MAKING THIS LIBRARY
-http://midi.teragonaudio.com/tech/midispec/run.htm
-https://learn.sparkfun.com/tutorials/midi-tutorial/introduction
+- http://midi.teragonaudio.com/tech/midispec/run.htm
+- https://learn.sparkfun.com/tutorials/midi-tutorial/introduction
 */
 
 
@@ -40,7 +40,7 @@ public:
   void (*realtimeCallback) (REALTIME type);
   void (*channelPressureCallback) (byte channel, byte pressure);
 private:
-  byte midiChannel;
+  //byte midiChannel;
   byte runningStatusIn;
 
   uint8_t midiMessageLength = 0;
@@ -123,13 +123,19 @@ public:
           midiMessageLength++;
 
           if ( midiMessageLength == 1 ) {
-            if ( runningStatusIn == MICRO_MIDI_CHANNEL_PRESSURE  ) {
+            // GET RID OF CHANNEL DATA
+            byte messageType = data & B11110000;
+            if ( messageType == MICRO_MIDI_CHANNEL_PRESSURE  ) {
+              // GET CHANNEL DATA AND OFFSET IT BY 1
+              byte midiChannel = (data & B00001111) + 1;
               if ( channelPressureCallback) channelPressureCallback(midiChannel, midiMessage[0] );
               midiMessageLength = 0;
             }
           } else if ( midiMessageLength == 2 ) {
-
-            switch ( runningStatusIn ) {
+            // GET RID OF CHANNEL DATA
+            byte messageType = data & B11110000;
+            byte midiChannel = (data & B00001111) + 1;
+            switch ( messageType ) {
             case MICRO_MIDI_NOTE_ON :
               if ( midiMessage[1] > 0  ) {
                 //LOG("MicroMidi:NoteOn", midiChannel, midiMessage[0], midiMessage[1]);
@@ -173,10 +179,13 @@ public:
 
           // voice messages
         } else {
+          runningStatusIn = data;
+          /*
           // GET RID OF CHANNEL DATA
           runningStatusIn = data & B11110000;
           // GET CHANNEL DATA AND OFFSET IT BY 1
           midiChannel = (data & B00001111) + 1;
+          */
           midiMessageLength = 0;
         }
 
@@ -204,7 +213,7 @@ public:
 
 
 
-   // NESTED CLASS
+  // NESTED CLASS
   template <int L>
   class LastNoteHeldTable {
     byte data[L];
