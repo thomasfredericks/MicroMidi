@@ -112,9 +112,9 @@ public:
   void receiveMessages() {
     while (stream->available() ) {
       int data = stream->read();
+      //LOG("MicroMidi:data", data);
+      //LOG("MicroMidi:status", runningStatusIn);
 
-      //Serial.print("RAW ");
-      //Serial.println(data);
 
       if (data < 0x80) { // 0x80 == 128 == B10000000
         if ( runningStatusIn  ) {
@@ -122,23 +122,26 @@ public:
           midiMessage[midiMessageLength] = data;
           midiMessageLength++;
 
+          //LOG("MicroMidi:buffer", midiMessageLength, midiMessage[0], midiMessage[1]);
+
           if ( midiMessageLength == 1 ) {
             // GET RID OF CHANNEL DATA
-            byte messageType = data & B11110000;
+            byte messageType = runningStatusIn & B11110000;
             if ( messageType == MICRO_MIDI_CHANNEL_PRESSURE  ) {
               // GET CHANNEL DATA AND OFFSET IT BY 1
-              byte midiChannel = (data & B00001111) + 1;
+              byte midiChannel = (runningStatusIn & B00001111) + 1;
               if ( channelPressureCallback) channelPressureCallback(midiChannel, midiMessage[0] );
               midiMessageLength = 0;
             }
           } else if ( midiMessageLength == 2 ) {
             // GET RID OF CHANNEL DATA
-            byte messageType = data & B11110000;
-            byte midiChannel = (data & B00001111) + 1;
+            byte messageType = runningStatusIn & B11110000;
+            byte midiChannel = (runningStatusIn & B00001111) + 1;
+            //LOG("MicroMidi:voice", messageType, midiChannel);
             switch ( messageType ) {
             case MICRO_MIDI_NOTE_ON :
               if ( midiMessage[1] > 0  ) {
-                //LOG("MicroMidi:NoteOn", midiChannel, midiMessage[0], midiMessage[1]);
+
                 if ( noteOnCallback) noteOnCallback(midiChannel, midiMessage[0], midiMessage[1]);
               } else {
                 //LOG("MicroMidi:NoteOff", midiChannel, midiMessage[0]);
@@ -173,7 +176,7 @@ public:
           if ( realtimeCallback ) realtimeCallback((REALTIME)data);
 
           // system common
-        } if ( data >= 0xF0 ) {
+        } else if ( data >= 0xF0 ) {
           runningStatusIn = 0;
           midiMessageLength = 0;
 
